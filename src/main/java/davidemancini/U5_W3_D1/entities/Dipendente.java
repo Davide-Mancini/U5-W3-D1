@@ -1,11 +1,14 @@
 package davidemancini.U5_W3_D1.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -14,7 +17,8 @@ import java.util.UUID;
 @ToString
 @Entity
 @Table(name = "dipendenti")
-public class Dipendente {
+@JsonIgnoreProperties({"password","authorities","enabled","accountNonLocked","accountNonExpired","credentialsNonExpired"})
+public class Dipendente implements UserDetails {
     @Id
     @GeneratedValue
     //IMPEDISCO LA CREAZIONE DEL SETTER DI LOMBOK PER L'ID
@@ -26,6 +30,8 @@ public class Dipendente {
     private String email;
     private String avatar;
     private String password;
+    @Enumerated(EnumType.STRING)
+    private Ruolo ruolo;
 
     //COSTRUTTORE
 
@@ -37,5 +43,16 @@ public class Dipendente {
         this.avatar = "https://ui-avatars.com/api/?name="+nome+"+"+cognome ;
         //METTO UN AVATAR DI DEFAULT CHE SARà MODIFICABILE.
         this.password=password;
+        //DI DEFAULT SARà UN UTENTE NORMALE
+        this.ruolo=Ruolo.UTENTE;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(this.ruolo.name()));
+    }
+    @Override
+    public String getUsername() {
+        return email;
     }
 }

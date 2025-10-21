@@ -7,6 +7,8 @@ import davidemancini.U5_W3_D1.services.DipendenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -40,12 +42,14 @@ private DipendenteService dipendenteService;
     }
     //ELIMINA UN DIPENDENTE
     @DeleteMapping("/{employeeId}")
+    @PreAuthorize("hasAuthority('AMMINISTRATORE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDipendente (@PathVariable UUID employeeId){
         dipendenteService.findByIdAndDelete(employeeId);
     }
     //AGGIORNA DIPENDENTE
     @PutMapping("/{employeeId}")
+    @PreAuthorize("hasAuthority('AMMINISTRATORE')")
     public Dipendente findByIdAndUpdate(@PathVariable UUID employeeId, @RequestBody @Validated NewDipendenteDTO body,BindingResult bindingResult){
         if (bindingResult.hasErrors()){
             throw new MyValidationException(bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getDefaultMessage()).toList());
@@ -54,8 +58,20 @@ private DipendenteService dipendenteService;
     }
     //AGGIUNGI IMMAGINE
     @PatchMapping("/{employeeId}/avatar")
+    @PreAuthorize("hasAuthority('AMMINISTRATORE')")
     public Dipendente uploadImage(@PathVariable UUID employeeId, @RequestParam("avatar")MultipartFile file){
         return dipendenteService.uploadAvatar(employeeId,file);
     }
 
+    //ENDPOINT /ME PER RITORNARE SOLO I DATI DELL'UTENTE LOGGATO
+    @GetMapping("/me")
+    public Dipendente getMyDipendente(@AuthenticationPrincipal Dipendente dipendenteLoggato){
+        return  dipendenteLoggato;
+    }
+
+    //ENDOPOINT /ME PER FAR MODIFICARE IL PROFILO SOLO DELL'UTENTE LOGGATO (GIUSTAMENTE NON POTRA MODIFICARE ALTRI PROFILI)
+    @PutMapping("/me")
+    public Dipendente myDipendenteUpdate (@AuthenticationPrincipal Dipendente dipendenteLggato,@RequestBody NewDipendenteDTO body){
+        return dipendenteService.findByIdAndUpdate(dipendenteLggato.getId(),body);
+    }
 }

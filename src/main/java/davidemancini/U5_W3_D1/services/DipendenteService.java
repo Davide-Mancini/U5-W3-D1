@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,11 +29,14 @@ public class DipendenteService {
     private ViaggioService viaggioService;
     @Autowired
     private Cloudinary cloudinaryUploader;
+    @Autowired
+    private PasswordEncoder bcrypt;
 
 
     //SALVA NUOVO DIPENDENTE
     public Dipendente save(NewDipendenteDTO body){
-        Dipendente newDipendente = new Dipendente(body.username(),body.nome(), body.cognome(), body.email(),body.password());
+        //QUI INSERISCO L'ENCODER DI BCRYPT PASSWORD.
+        Dipendente newDipendente = new Dipendente(body.username(),body.nome(), body.cognome(), body.email(),bcrypt.encode(body.password())  );
         return dipendenteRepository.save(newDipendente);
     }
 
